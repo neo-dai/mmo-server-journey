@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Check file structure
+        run: |
+          echo "检查仓库结构..."
+          if [ ! -f "README.md" ]; then
+            echo "错误: 缺少 README.md"
+            exit 1
+          fi
+          echo "✓ README.md 存在"
+          
+      - name: Check for common files
+        run: |
+          if [ ! -f ".gitignore" ]; then
+            echo "警告: 缺少 .gitignore"
+          else
+            echo "✓ .gitignore 存在"
+          fi
+          
+          if [ ! -f "LICENSE" ]; then
+            echo "警告: 缺少 LICENSE"
+          else
+            echo "✓ LICENSE 存在"
+          fi
+
