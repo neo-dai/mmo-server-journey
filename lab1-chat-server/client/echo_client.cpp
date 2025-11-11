@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-class EchoClient {
+class ChatClient {
 private:
     int client_socket;
     std::string server_ip;
@@ -18,7 +18,7 @@ private:
 
     void log(const std::string& message) {
         std::lock_guard<std::mutex> lock(cout_mutex);
-        std::cout << "[客户端] " << message << std::endl;
+        std::cout << message;
     }
 
     void receive_messages() {
@@ -29,9 +29,9 @@ private:
             
             if (bytes_read <= 0) {
                 if (bytes_read == 0) {
-                    log("服务器断开连接");
+                    log("[系统] 服务器断开连接\n");
                 } else {
-                    log("接收数据错误");
+                    log("[系统] 接收数据错误\n");
                 }
                 connected = false;
                 break;
@@ -39,15 +39,17 @@ private:
 
             buffer[bytes_read] = '\0';
             std::string message(buffer);
-            log("收到回显: " + message);
+            
+            // 直接显示服务器发送的消息（已包含格式）
+            log(message);
         }
     }
 
 public:
-    EchoClient(const std::string& ip, int port) 
+    ChatClient(const std::string& ip, int port) 
         : client_socket(-1), server_ip(ip), server_port(port), connected(false) {}
 
-    ~EchoClient() {
+    ~ChatClient() {
         disconnect();
     }
 
@@ -78,10 +80,10 @@ public:
         }
 
         connected = true;
-        log("已连接到服务器: " + server_ip + ":" + std::to_string(server_port));
+        log("[客户端] 已连接到服务器: " + server_ip + ":" + std::to_string(server_port) + "\n");
 
         // 启动接收消息的线程（读写分离）
-        std::thread recv_thread(&EchoClient::receive_messages, this);
+        std::thread recv_thread(&ChatClient::receive_messages, this);
         recv_thread.detach();
 
         return true;
@@ -93,14 +95,15 @@ public:
             return false;
         }
 
-        ssize_t bytes_sent = send(client_socket, message.c_str(), message.length(), 0);
+        // 发送消息（添加换行符）
+        std::string msg_with_newline = message + "\n";
+        ssize_t bytes_sent = send(client_socket, msg_with_newline.c_str(), msg_with_newline.length(), 0);
         if (bytes_sent < 0) {
-            log("发送消息失败");
+            log("[系统] 发送消息失败\n");
             connected = false;
             return false;
         }
 
-        log("已发送: " + message);
         return true;
     }
 
@@ -109,7 +112,6 @@ public:
             connected = false;
             close(client_socket);
             client_socket = -1;
-            log("已断开连接");
         }
     }
 
@@ -130,14 +132,14 @@ int main(int argc, char* argv[]) {
         server_port = std::stoi(argv[2]);
     }
 
-    EchoClient client(server_ip, server_port);
+    ChatClient client(server_ip, server_port);
 
     if (!client.connect()) {
         return 1;
     }
 
-    std::cout << "=== Echo Client ===" << std::endl;
-    std::cout << "输入消息发送到服务器（输入 'quit' 或 'exit' 退出）" << std::endl;
+    std::cout << "=== 聊天室客户端 ===" << std::endl;
+    std::cout << "输入消息发送到聊天室（输入 'quit' 或 'exit' 退出）" << std::endl;
     std::cout << "========================================" << std::endl;
 
     std::string input;
