@@ -61,47 +61,73 @@
 
 ---
 
-### 📌 版本 0.3：基础聊天室（无状态）
+### ✅ 版本 0.3：基础聊天室（已完成）
 **目标**：实现最简单的多人聊天功能
 
 **功能点**：
-- [ ] 客户端连接时设置昵称（name）
-- [ ] 服务器维护在线用户列表（内存中）
-- [ ] 用户发送消息，广播给所有在线用户
-- [ ] 用户上线/下线时，通知其他用户
-
-**消息协议示例**：
-```json
-// 客户端设置昵称
-{"type": "set_name", "name": "Alice"}
-
-// 客户端发送消息
-{"type": "chat", "message": "大家好！"}
-
-// 服务器广播消息
-{"type": "broadcast", "from": "Alice", "message": "大家好！", "timestamp": 1234567890}
-
-// 用户上线通知
-{"type": "user_joined", "name": "Bob"}
-
-// 用户下线通知
-{"type": "user_left", "name": "Bob"}
-```
+- [x] 服务器维护在线用户列表（内存中）
+- [x] 用户发送消息，广播给所有在线用户
+- [x] 用户上线/下线时，通知其他用户
+- [x] 自动用户标识（使用 IP:Port）
 
 **验收标准**：
-- 用户A设置昵称后发送消息，用户B和C都能收到
-- 用户D上线时，A、B、C收到通知
-- 用户A下线时，B、C收到通知
+- ✅ 用户发送消息，所有其他用户都能收到
+- ✅ 用户上线时，其他用户收到通知
+- ✅ 用户下线时，其他用户收到通知
 
 **技术要点**：
 - 连接池管理（Connection Pool）
 - 消息广播机制
 - 简单的状态管理（内存中的用户列表）
-- JSON 消息协议
+- 纯文本消息协议
+
+**Tag**: `lab1-v0.3-chat-room`
 
 ---
 
-### 📌 版本 0.4：分组/频道功能（无状态）
+### ✅ 版本 0.4：Protobuf 协议规范化 + 设置名字（已完成）
+**目标**：使用 Protobuf 规范化消息协议，支持用户设置名字
+
+**功能点**：
+- [x] Protobuf 协议定义和集成
+- [x] 消息类型规范化（使用 SC_/CS_ 前缀）
+- [x] 设置名字功能（可选）
+- [x] 时间戳支持
+- [x] 错误处理和消息验证
+
+**消息协议**：
+```protobuf
+// 客户端 -> 服务器
+CS_SetNameRequest { type: CS_SET_NAME, name: "Alice" }
+ChatMessage { type: CS_CHAT, message: "Hello!" }
+
+// 服务器 -> 客户端
+SC_SetNameResponse { type: SC_SET_NAME_RESPONSE, success: true, new_name: "Alice" }
+ChatMessage { type: SC_BROADCAST, from: "Alice", message: "Hello!", timestamp: 1234567890 }
+ChatMessage { type: SC_USER_JOINED, from: "Bob" }
+ChatMessage { type: SC_USER_LEFT, from: "Alice" }
+SC_ErrorMessage { type: SC_ERROR, error_code: "INVALID_NAME", error_message: "..." }
+```
+
+**验收标准**：
+- ✅ 客户端可以使用 Protobuf 协议发送消息
+- ✅ 用户可以设置名字（`/name <名字>`）
+- ✅ 设置了名字后，消息显示使用名字而非 IP:Port
+- ✅ 未设置名字时，使用 IP:Port 作为显示标识
+- ✅ 名字验证（长度、字符限制）
+
+**技术要点**：
+- Protobuf 协议定义和代码生成
+- 消息序列化/反序列化
+- 二进制协议传输（长度前缀）
+- 名字验证和错误处理
+- C++17 标准（Protobuf 5.x 要求）
+
+**Tag**: `lab1-v0.4-protobuf`
+
+---
+
+### 📌 版本 0.5：分组/频道功能（无状态）
 **目标**：支持创建和加入不同的聊天分组
 
 **功能点**：
@@ -193,9 +219,10 @@
 
 ## 技术栈
 
-- **语言**: C++11
+- **语言**: C++17（Protobuf 5.x 要求）
 - **网络**: TCP Socket
 - **并发**: std::thread, std::mutex
+- **协议**: Protobuf
 - **构建**: CMake
 
 ---

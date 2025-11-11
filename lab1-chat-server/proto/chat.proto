@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package chat;
+
+// 消息类型枚举
+enum MessageType {
+    UNKNOWN = 0;
+    
+    // 客户端 -> 服务器 (CS_)
+    CS_SET_NAME = 1;        // 设置名字
+    CS_CHAT = 2;           // 发送聊天消息
+    
+    // 服务器 -> 客户端 (SC_)
+    SC_SET_NAME_RESPONSE = 10;  // 设置名字响应
+    SC_BROADCAST = 11;          // 广播消息
+    SC_USER_JOINED = 12;        // 用户加入通知
+    SC_USER_LEFT = 13;          // 用户离开通知
+    SC_ERROR = 14;              // 错误消息
+}
+
+// 通用消息结构（用于广播、用户加入/离开）
+message ChatMessage {
+    MessageType type = 1;           // 消息类型
+    string from = 2;                 // 发送者标识（显示用）
+    string message = 3;              // 消息内容
+    int64 timestamp = 4;             // 时间戳（Unix timestamp）
+    string user_id = 5;              // 用户内部ID（IP:Port）
+    string display_name = 6;         // 显示名字（如果设置了）
+}
+
+// 客户端 -> 服务器：设置名字请求
+message CS_SetNameRequest {
+    MessageType type = 1;           // 固定为 CS_SET_NAME
+    string name = 2;                 // 要设置的名字
+}
+
+// 服务器 -> 客户端：设置名字响应
+message SC_SetNameResponse {
+    MessageType type = 1;           // 固定为 SC_SET_NAME_RESPONSE
+    bool success = 2;                // 是否成功
+    string message = 3;              // 响应消息
+    string old_name = 4;             // 旧名字（如果有）
+    string new_name = 5;             // 新名字
+}
+
+// 服务器 -> 客户端：错误消息
+message SC_ErrorMessage {
+    MessageType type = 1;           // 固定为 SC_ERROR
+    string error_code = 2;          // 错误代码
+    string error_message = 3;        // 错误描述
+}
+
