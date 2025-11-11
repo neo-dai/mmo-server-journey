@@ -10,3 +10,6 @@ add_executable(echo_server echo_server.cpp)
 # 编译选项
 target_compile_options(echo_server PRIVATE -Wall -Wextra)
 
+# 链接 pthread（用于多线程支持）
+target_link_libraries(echo_server pthread)
+

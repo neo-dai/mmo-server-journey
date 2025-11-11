@@ -10,3 +10,6 @@ add_executable(echo_client echo_client.cpp)
 # 编译选项
 target_compile_options(echo_client PRIVATE -Wall -Wextra)
 
+# 链接 pthread（用于多线程支持）
+target_link_libraries(echo_client pthread)
+
